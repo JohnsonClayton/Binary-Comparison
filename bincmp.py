@@ -17,6 +17,7 @@ def main(stdscr):
 
     draw_boundaries(stdscr)
 
+
     stdscr.refresh()
     stdscr.getkey()
 
