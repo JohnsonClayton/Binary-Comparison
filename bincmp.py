@@ -74,8 +74,76 @@ def read_file(filename):
         data = file_obj.read()
     return data
 
+def to_hex_string(data):
+    vals = []
+    for ch in data:
+        val = hex(ord(ch))[2:]
+        if len(val) < 2:
+            val = '0' + val
+        vals += val
+    return vals
+
 def print_data(stdscr, data):
-    stdscr.addstr(0, 0, "File 1: {}")
+    #stdscr.addstr(0, 0, "File 1: {}".format(data[0]))
+    x1_min = int(curses.COLS / 10) + 1
+    x1_max = int(curses.COLS / 2) - 2
+    x2_min = int(curses.COLS / 2) + 1
+    y1 = 1
+    y2 = y1
+
+    #data[0] needs to be larger or equal to size of data[1]
+    if len(data[0]) >= len(data[1]):
+        #Get all even numbers in this search space
+        indices1 = []
+        for num in range(0, len(data[0])):
+            if num % 2 == 0:
+                indices1.append(num)
+        indices2 = []
+        for num in range(0, len(data[1])):
+            if num % 2 == 0:
+                indices2.append(num)
+
+        #Assuming that window space for files is the same...
+        x1 = x1_min
+        x2 = x2_min
+        four_count = 0
+        for i in indices1:
+            #Keep them at the same index
+            i2 = i
+
+            #If first file is larger, we need to append garbage to end of second to pad 
+            if i2 >= len(data[1]):
+                data[1].append('')
+                data[1].append('')
+
+            #Get data ready to print
+            val1 = data[0][i] + data[0][i+1]
+            val2 = data[1][i] + data[1][i+1]
+
+            #Print data
+            stdscr.addstr(y1, x1, val1 + " ")
+            stdscr.addstr(y2, x2, val2 + " ")
+
+            #Update for next position
+            x1 += 3
+            x2 += 3
+
+            four_count += 1
+            if four_count % 4 == 0 and x1 < x1_max:
+                stdscr.addstr(y1, x1, " ")
+                stdscr.addstr(y2, x2, " ")
+                x1 += 3
+                x2 += 3
+            elif x1 >= x1_max:
+                x1 = x1_min
+                x2 = x2_min
+                y1 += 1
+                y2 += 1
+    else:
+        #data[1] is larger than data[0], so we need to account for that
+        x1 = x1+1
+
+
 
 def init_screen(stdscr):
     draw_boundaries(stdscr)
@@ -86,9 +154,8 @@ def init_screen(stdscr):
     
     #Load up files
     file_data = ["", ""]
-    file_data[0] = read_file(filename1)
-    print(file_data[0])
-    file_data[1] = read_file(filename2)
+    file_data[0] = to_hex_string(read_file(filename1))
+    file_data[1] = to_hex_string(read_file(filename2))
     
     #Print this data
     print_data(stdscr, file_data)
