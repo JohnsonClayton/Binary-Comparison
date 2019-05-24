@@ -98,10 +98,6 @@ def print_data(stdscr, data):
         for num in range(0, len(data[0])):
             if num % 2 == 0:
                 indices1.append(num)
-        indices2 = []
-        for num in range(0, len(data[1])):
-            if num % 2 == 0:
-                indices2.append(num)
 
         #Assuming that window space for files is the same...
         x1 = x1_min
@@ -141,7 +137,48 @@ def print_data(stdscr, data):
                 y2 += 1
     else:
         #data[1] is larger than data[0], so we need to account for that
-        x1 = x1+1
+        #Get all even numbers in this search space
+        indices1 = []
+        for num in range(0, len(data[1])):
+            if num % 2 == 0:
+                indices1.append(num)
+
+        #Assuming that window space for files is the same...
+        x1 = x1_min
+        x2 = x2_min
+        four_count = 0
+        for i in indices1:
+            #Keep them at the same index
+            i2 = i
+
+            #If first file is larger, we need to append garbage to end of second to pad 
+            if i2 >= len(data[0]):
+                data[0].append('')
+                data[0].append('')
+
+            #Get data ready to print
+            val1 = data[0][i] + data[0][i+1]
+            val2 = data[1][i] + data[1][i+1]
+
+            #Print data
+            stdscr.addstr(y1, x1, val1 + " ")
+            stdscr.addstr(y2, x2, val2 + " ")
+
+            #Update for next position
+            x1 += 3
+            x2 += 3
+
+            four_count += 1
+            if four_count % 4 == 0 and x1 < x1_max:
+                stdscr.addstr(y1, x1, " ")
+                stdscr.addstr(y2, x2, " ")
+                x1 += 3
+                x2 += 3
+            elif x1 >= x1_max:
+                x1 = x1_min
+                x2 = x2_min
+                y1 += 1
+                y2 += 1
 
 
 
