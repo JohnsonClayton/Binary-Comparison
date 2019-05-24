@@ -16,15 +16,16 @@ def print_message(stdscr, msg):
     x_max = int(curses.COLS/2) + 20
     width = x_max - x_min
 
+    #Height of the box depends on the length of the message provided
     lines = math.ceil(len(msg) / width + 1)
 
-    y_min = int(curses.LINES/2) - int(math.ceil(int(lines) / 2)) - 1
+    y_min = int(curses.LINES/2) - int(math.ceil(int(lines) / 2)) - 1    #I'm sorry for this
     y_max = int(curses.LINES/2) + int(math.ceil(int(lines) / 2)) + 1
 
     assert(width > 0)
 
     draw_message_box(stdscr, x_min, x_max, y_min, y_max)
-    #Message needs to be drawn responsive to width of the box but this will do for now
+    #Message needs to be drawn responsive to width of the box
     if len(msg) > (x_max - x_min):
         y = y_min+1
         text_width = width - 4
@@ -50,6 +51,8 @@ def print_message(stdscr, msg):
     else:
         stdscr.addstr(y_min + 2, x_min + 2, msg)
 
+    stdscr.move(0,0)
+
 
 def draw_boundaries(stdscr):
     #Draw lines separating the two files
@@ -60,11 +63,36 @@ def draw_boundaries(stdscr):
         stdscr.addch(y, quarter_col, curses.ACS_VLINE)
         stdscr.addch(y, mid_col, curses.ACS_VLINE)
         stdscr.addch(y, threequarter_col, curses.ACS_VLINE)
-def print_file_names(stdscr):
-    filename1 = sys.argv[1]
-    filename2 = sys.argv[2]
+def print_file_names(stdscr, filename1, filename2):
     stdscr.addstr(curses.LINES - 1, 1 + int(curses.COLS/10), filename1, curses.A_REVERSE)
     stdscr.addstr(curses.LINES - 1, 1 + int(curses.COLS/2), filename2, curses.A_REVERSE)
+
+def read_file(filename):
+    #There need to be some protections to scrub filename's input prior to this step!
+    data = ""
+    with open(filename, "r") as file_obj:
+        data = file_obj.read()
+    return data
+
+def print_data(stdscr, data):
+    stdscr.addstr(0, 0, "File 1: {}")
+
+def init_screen(stdscr):
+    draw_boundaries(stdscr)
+
+    filename1 = sys.argv[1]
+    filename2 = sys.argv[2]
+    print_file_names(stdscr, filename1, filename2)
+    
+    #Load up files
+    file_data = ["", ""]
+    file_data[0] = read_file(filename1)
+    print(file_data[0])
+    file_data[1] = read_file(filename2)
+    
+    #Print this data
+    print_data(stdscr, file_data)
+    
 
 def main(stdscr):
     #Clear screen
@@ -72,14 +100,10 @@ def main(stdscr):
 
     #If 2 files provided, intialize 
     if len(sys.argv) >= 3:
-        draw_boundaries(stdscr)
-        print_file_names(stdscr)
+        init_screen(stdscr)
     #Else, print error
     else:
-        print_message(stdscr, "ERROR: Two files are required to compare them. Hello? Test this is still a test omg we need more testing hows it going be now youre nowhere anymore??? ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-
-
-
+        print_message(stdscr, "ERROR: Two files are required to compare them. Press any key to exit")
 
     stdscr.refresh()
     stdscr.getkey()
