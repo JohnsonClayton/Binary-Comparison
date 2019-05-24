@@ -1,6 +1,7 @@
 from curses import wrapper
 import curses
 import sys
+import math
 
 def draw_message_box(stdscr, x_min, x_max, y_min, y_max):
     for x in range(x_min, x_max):
@@ -13,10 +14,12 @@ def draw_message_box(stdscr, x_min, x_max, y_min, y_max):
 def print_message(stdscr, msg):
     x_min = int(curses.COLS/2) - 20
     x_max = int(curses.COLS/2) + 20
-    y_min = int(curses.LINES/2) - 5
-    y_max = int(curses.LINES/2) + 5
-
     width = x_max - x_min
+
+    lines = math.ceil(len(msg) / width + 1)
+
+    y_min = int(curses.LINES/2) - int(math.ceil(int(lines) / 2)) - 1
+    y_max = int(curses.LINES/2) + int(math.ceil(int(lines) / 2)) + 1
 
     assert(width > 0)
 
@@ -33,13 +36,13 @@ def print_message(stdscr, msg):
                 end_reached = True
                 stdscr.addstr(y, x_min + 2, substr)
             elif len(substr) == text_width:
-                if substr[-1] != ' ' and msg[text_width] != ' ':
+                if substr[-1] != ' ' and (len(msg) - len(substr)) != 0:
                     substr += '-'
                 stdscr.addstr(y, x_min + 2, substr)
                 msg = msg[text_width:]
                 y = y + 1
             else:
-                if substr[-1] != ' ':
+                if substr[-1] != ' ' and msg[text_width] != ' ':
                     substr += '-'
                 stdscr.addstr(y, x_min + 2, substr)
                 msg = msg[text_width:]
@@ -73,7 +76,7 @@ def main(stdscr):
         print_file_names(stdscr)
     #Else, print error
     else:
-        print_message(stdscr, "ERROR: Two files are required to compare them. Hello? Test this is still a test omg we need more testing hows it going be now youre nowhere anymore???")
+        print_message(stdscr, "ERROR: Two files are required to compare them. Hello? Test this is still a test omg we need more testing hows it going be now youre nowhere anymore??? ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
 
 
 
