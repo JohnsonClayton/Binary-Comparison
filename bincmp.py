@@ -1,14 +1,19 @@
+#Created by Clayton Johnson => github.com/JohnsonClayton
+#Partly inspired by example => github.com/mingrammer/python-curses-scroll-example
+
 from curses import wrapper
 import curses
 import sys
 import math
 
-UP      = 1
-DOWN    = -1
-LEFT    = 1
-RIGHT   = -1
 
 class Screen(object):
+    #Maps for the change in (y, x)
+    UP      = [1, 0]
+    DOWN    = [-1, 0]
+    LEFT    = [0, -1]
+    RIGHT   = [0, 1]
+
     def __init__(self, scrn):
         #stdscr object
         self.screen = scrn
@@ -178,6 +183,10 @@ class Screen(object):
             #Uknown input
             print("uknown input")
 
+    def move_cursor(self, direction):
+        #Update the cursor position based on the direction vector handed over
+
+
     def take_input(self):
         while True:
             self.screen.refresh()
@@ -185,17 +194,17 @@ class Screen(object):
 
             #Options for input
             if ch == curses.KEY_DOWN:
-                #Scroll Down
-                scroll(self.screen, DOWN)
+                #Move Cursor Down
+                self.move_cursor(self.DOWN)
             elif ch == curses.KEY_UP:
-                #Scroll Up
-                scroll(self.screen, UP)
+                #Move Cursor Up
+                self.move_cursor(self.UP)
             elif ch == curses.KEY_RIGHT:
-                #Move cursers right
-                move_to(self.screen, RIGHT)
+                #Move cursor right
+                self.move_cursor(self.RIGHT)
             elif ch == curses.KEY_LEFT:
-                #Move cursers left
-                move_to(self.screen, LEFT)
+                #Move cursor left
+                self.move_cursor(self.LEFT)
             elif ch == ord('q'):
                 break
             else:
@@ -231,7 +240,7 @@ class Screen(object):
             byte_chunks = 0
 
             #Loop until both files are out of bytes OR we printed to the end of the page
-            while (ch1 != "" or ch2 != "") and (y1 < curses.LINES):
+            while (ch1 != "" or ch2 != "") and (y1 < curses.LINES - 1):
                 if (len(self.data[0]) <= index):
                     ch1 = ""
                 else:
@@ -242,9 +251,15 @@ class Screen(object):
                 else:
                     ch2 = self.data[1][index]
 
-
-                self.screen.addstr(y1, x1, ch1 + " ")
-                self.screen.addstr(y2, x2, ch2 + " ")
+                #Highlight if the bytes are different
+                if (ch1 != ch2):
+                    self.screen.addstr(y1, x1, ch1, curses.color_pair(1))
+                    self.screen.addstr(y1, x1 + 2, " ")
+                    self.screen.addstr(y2, x2, ch2, curses.color_pair(1))
+                    self.screen.addstr(y2, x2 + 2, " ")
+                else:
+                    self.screen.addstr(y1, x1, ch1 + " ")
+                    self.screen.addstr(y2, x2, ch2 + " ")
 
                 #Update for next position
                 x1 += 3
