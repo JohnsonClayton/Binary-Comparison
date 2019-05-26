@@ -126,8 +126,14 @@ def print_data(stdscr, data):
             val2 = data[1][i] + data[1][i+1]
 
             #Print data
-            stdscr.addstr(y1, x1, val1 + " ")
-            stdscr.addstr(y2, x2, val2 + " ")
+            if val1 != val2:
+                stdscr.addstr(y1, x1, val1, curses.color_pair(1))
+                stdscr.addstr(y1, x1+2, " ")
+                stdscr.addstr(y2, x2, val2 + " ", curses.color_pair(1))
+                stdscr.addstr(y2, x2+2, " ")
+            else:
+                stdscr.addstr(y1, x1, val1 + " ")
+                stdscr.addstr(y2, x2, val2 + " ")
 
 
             #Update for next position
@@ -207,9 +213,15 @@ def init_screen(stdscr):
     file_data = ["", ""]
     file_data[0] = to_hex_string(read_file(filename1))
     file_data[1] = to_hex_string(read_file(filename2))
+
+    #Initialize colors
+    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
     
     #Print this data
     print_data(stdscr, file_data)
+
+    #Move cursor to start of file1
+    stdscr.move(1, 1 + int(curses.COLS/10))
     
 def scroll(direction):
     if direction < 0:
@@ -250,7 +262,7 @@ def take_input(stdscr):
             move_to(RIGHT)
         elif ch == curses.KEY_LEFT:
             #Move cursers left
-            move_to_(LEFT)
+            move_to(LEFT)
         elif ch == ord('q'):
             break
         else:
