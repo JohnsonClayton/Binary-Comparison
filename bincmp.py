@@ -143,7 +143,8 @@ class Screen(object):
             val = hex(ord(ch))[2:]
             if len(val) < 2:
                 val = '0' + val
-            vals += val
+            vals.append(val)
+
         return vals
 
     def read_file(self, filename):
@@ -202,8 +203,71 @@ class Screen(object):
                 print("unkown input")
 
     def print_data(self):
+        
+        #Positional defaults
+        x1_min = int(curses.COLS / 10) + 1
+        x1_max = int(curses.COLS / 2) - 2
+        x2_min = int(curses.COLS / 2) + 1
+        y1 = 1
+        y2 = y1
+
+        #Default char/index values
+        ch1 = " "
+        ch2 = ch1
+
+        if len(self.data[0]) > 0 and len(self.data[1]) > 0:
+
+            #We need to base index off `top`
+            if self.top >= 0:
+                #Find how many lines we skip printing
+                index = self.top * 12
+            else:
+                #Assume something broke
+                self.print_message("I'm sorry, we lost track of the lines")
+
+            x1 = x1_min
+            x2 = x2_min
+
+            byte_chunks = 0
+
+            #Loop until both files are out of bytes OR we printed to the end of the page
+            while (ch1 != "" or ch2 != "") and (y1 < curses.LINES):
+                if (len(self.data[0]) <= index):
+                    ch1 = ""
+                else:
+                    ch1 = self.data[0][index]
+
+                if (len(self.data[1]) <= index):
+                    ch2 = ""
+                else:
+                    ch2 = self.data[1][index]
 
 
+                self.screen.addstr(y1, x1, ch1 + " ")
+                self.screen.addstr(y2, x2, ch2 + " ")
+
+                #Update for next position
+                x1 += 3
+                x2 += 3
+
+                byte_chunks += 1
+                if byte_chunks % 4 == 0 and x1 < x1_max:
+                    #Add additional space
+                    self.screen.addstr(y1, x1, " ")
+                    self.screen.addstr(y2, x2, " ")
+                    x1 += 3
+                    x2 += 3
+                elif x1 >= x1_max:
+                    x1 = x1_min
+                    x2 = x2_min
+                    y1 += 1
+                    y2 += 1
+
+                index += 1
+
+        else:
+            #Something has gone horribly wrong
+            self.print_message("ERROR: Something has gone horribly wrong. I'm sorry.")
 
 def main(stdscr):
     screen_instance = Screen(stdscr)
