@@ -3,6 +3,11 @@ import curses
 import sys
 import math
 
+UP      = 1
+DOWN    = -1
+LEFT    = 1
+RIGHT   = -1
+
 def draw_message_box(stdscr, x_min, x_max, y_min, y_max):
     for x in range(x_min, x_max):
         stdscr.addch(y_min, x, curses.ACS_HLINE)
@@ -104,6 +109,10 @@ def print_data(stdscr, data):
         x2 = x2_min
         four_count = 0
         for i in indices1:
+            if y1 >= 30:
+                #stdscr.addstr(y2, x2, "COLS: {}".format(curses.COLS))
+                break
+
             #Keep them at the same index
             i2 = i
 
@@ -119,6 +128,7 @@ def print_data(stdscr, data):
             #Print data
             stdscr.addstr(y1, x1, val1 + " ")
             stdscr.addstr(y2, x2, val2 + " ")
+
 
             #Update for next position
             x1 += 3
@@ -148,6 +158,10 @@ def print_data(stdscr, data):
         x2 = x2_min
         four_count = 0
         for i in indices1:
+            #Check height to ensure we don't error out
+            if y1 >= curses.COLS:
+                break
+
             #Keep them at the same index
             i2 = i
 
@@ -197,6 +211,52 @@ def init_screen(stdscr):
     #Print this data
     print_data(stdscr, file_data)
     
+def scroll(direction):
+    if direction < 0:
+        #Scroll down
+        print("scroll down")
+    elif direction > 0:
+        #Scroll up
+        print("scroll up")
+    else:
+        #Bad input
+        print("bad input")
+
+def move_to(direction):
+    if direction < 0:
+        #Move to the right
+        print("move right")
+    elif direction > 0:
+        #Move to the left
+        print("move left")
+    else:
+        #Uknown input
+        print("uknown input")
+
+def take_input(stdscr):
+    while True:
+        stdscr.refresh()
+        ch = stdscr.getch()
+
+        #Options for input
+        if ch == curses.KEY_DOWN:
+            #Scroll Down
+            scroll(DOWN)
+        elif ch == curses.KEY_UP:
+            #Scroll Up
+            scroll(UP)
+        elif ch == curses.KEY_RIGHT:
+            #Move cursers right
+            move_to(RIGHT)
+        elif ch == curses.KEY_LEFT:
+            #Move cursers left
+            move_to_(LEFT)
+        elif ch == ord('q'):
+            break
+        else:
+            #Uknown input
+            print("unkown input")
+
 
 def main(stdscr):
     #Clear screen
@@ -205,11 +265,11 @@ def main(stdscr):
     #If 2 files provided, intialize 
     if len(sys.argv) >= 3:
         init_screen(stdscr)
+        take_input(stdscr)
     #Else, print error
     else:
         print_message(stdscr, "ERROR: Two files are required to compare them. Press any key to exit")
 
     stdscr.refresh()
-    stdscr.getkey()
 
 wrapper(main)
