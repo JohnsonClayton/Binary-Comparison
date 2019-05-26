@@ -9,8 +9,8 @@ import math
 
 class Screen(object):
     #Maps for the change in (y, x)
-    UP      = [1, 0]
-    DOWN    = [-1, 0]
+    UP      = [-1, 0]
+    DOWN    = [1, 0]
     LEFT    = [0, -1]
     RIGHT   = [0, 1]
 
@@ -20,7 +20,9 @@ class Screen(object):
 
         #Default values
         self.top = 0
+        self.bottom = 0
         self.data = ["", ""]
+        self.highlights = []
 
         self.screen.clear()
 
@@ -43,36 +45,22 @@ class Screen(object):
 
         #Initialize colors
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
+
+        #Set bottom
+        self.set_bottom_val()
         
         #Print this data
         self.print_data()
 
-        #Move cursor to start of file1
-        self.screen.move(1, 1 + int(curses.COLS/10))
+        #Move cursor to beginning of file1
+        self.reset_cursor()
 
-    def take_input(self):
-        while True:
-            self.screen.refresh()
-            ch = self.screen.getch()
 
-            #Options for input
-            if ch == curses.KEY_DOWN:
-                #Scroll Down
-                scroll(self.screen, DOWN)
-            elif ch == curses.KEY_UP:
-                #Scroll Up
-                scroll(self.screen, UP)
-            elif ch == curses.KEY_RIGHT:
-                #Move cursers right
-                move_to(self.screen, RIGHT)
-            elif ch == curses.KEY_LEFT:
-                #Move cursers left
-                move_to(self.screen, LEFT)
-            elif ch == ord('q'):
-                break
-            else:
-                #Unknown input
-                print("unkown input")
+    def set_bottom_val(self):
+        lines1 = int(len(self.data[0]) / 12) + 1
+        lines2 = int(len(self.data[1]) / 12) + 1
+        self.bottom = lines1 if lines1 > lines2 else lines2
+        #self.screen.addstr(0, 0, "{}".format(self.bottom))
 
     def draw_boundaries(self):
         #Draw lines separating the two files
@@ -161,35 +149,63 @@ class Screen(object):
 
 
     def scroll(self, direction):
-        if direction < 0:
-            #Scroll down
-            print("scroll down")
-        elif direction > 0:
-            #Scroll up
-            print("scroll up")
-        else:
-            #Bad input
-            print("bad input")
-        self.top += direction
+        if self.top >= 0 and self.top <= self.bottom:
+            self.top += direction[0]
+            self.print_data()
 
-    def move_to(self, direction):
-        if direction < 0:
-            #Move to the right
-            print("move right")
-        elif direction > 0:
-            #Move to the left
-            print("move left")
-        else:
-            #Uknown input
-            print("uknown input")
+    def remove_highlight(self, y, x):
+        #Removes the given coordinates from highlight list
+        for pos in self.highlights: #This could be more efficient
+            if pos[0] == y and pos[1] == x:
+                self.highlights.remove(pos)
+                val = self.screen.getstr(y, x)
+                self.screen.addstr(y, x, val)
+
+    def add_highlight(self, y, x):
+        #Adds given coordinates to highlight list
+        self.highlights.append([y, x])
+
+    def do_move_cursor(self, prev_y, prev_x, next_y, next_x):
+        #self.remove_highlight(prev_y, prev_x + 43)
+        #self.add_highlight(next_y, next_x + 43)
+        self.screen.move(next_y, next_x)
 
     def move_cursor(self, direction):
         #Update the cursor position based on the direction vector handed over
+        pos = curses.getsyx()
+        next_pos = [pos[0] + direction[0], pos[1] + direction[1]]
+        if next_pos[1] < 0 or next_pos[1] >= curses.COLS/2 or next_pos[0] > self.bottom:
+            #Trying to go offscreen left or right with x's
+            curses.beep()
+        elif next_pos[0] < 1:
+            #Scroll
+            self.scroll(self.UP)
+            self.screen.move(pos[0], pos[1])
+        elif next_pos[0] >= curses.LINES - 1:
+            #Scroll
+            self.scroll(self.DOWN)
+            self.screen.move(pos[0], pos[1])
+        else:
+            #self.screen.move(next_pos[0], next_pos[1])
+            self.do_move_cursor(pos[0], pos[1], next_pos[0], next_pos[1])
 
+    def reset_cursor(self):
+        self.screen.move(1, 1 + int(curses.COLS/10))
+
+    def update_screen(self):
+        #Redraw all the highlighted characters
+        y = 0
+        for pos in self.highlights:
+            val = self.screen.getstr(pos[0], pos[1])
+            self.screen.addstr(pos[0], pos[1], val, curses.A_REVERSE)
+            self.screen.move(pos[0], pos[1] - 43)
+            #self.screen.addstr(y, 0, "{}".format(pos))
+
+        self.screen.refresh()
 
     def take_input(self):
         while True:
-            self.screen.refresh()
+            self.update_screen()
             ch = self.screen.getch()
 
             #Options for input
@@ -229,10 +245,14 @@ class Screen(object):
             #We need to base index off `top`
             if self.top >= 0:
                 #Find how many lines we skip printing
+                    #self.screen.addstr(0, 0, "top: {}".format(self.top))
+                    #self.screen.addstr(1, 0, "btm: {}".format(self.bottom))
                 index = self.top * 12
             else:
                 #Assume something broke
-                self.print_message("I'm sorry, we lost track of the lines")
+                index = 0
+                self.top = 0
+                #self.print_message("I'm sorry, we lost track of the lines")
 
             x1 = x1_min
             x2 = x2_min
@@ -283,6 +303,7 @@ class Screen(object):
         else:
             #Something has gone horribly wrong
             self.print_message("ERROR: Something has gone horribly wrong. I'm sorry.")
+
 
 def main(stdscr):
     screen_instance = Screen(stdscr)
